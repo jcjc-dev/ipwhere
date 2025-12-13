@@ -1,21 +1,5 @@
 # ============================================
-# Stage 1: Download MMDB databases
-# ============================================
-FROM alpine:3.19 AS downloader
-
-RUN apk add --no-cache curl jq
-
-WORKDIR /data
-
-# Download latest DB-IP databases from mmdb-latest releases
-RUN RELEASE_URL=$(curl -s https://api.github.com/repos/Shoyu-Dev/mmdb-latest/releases/latest | jq -r '.assets[] | select(.name | contains("dbip")) | .browser_download_url' | head -1 | sed 's|/[^/]*$||') && \
-    echo "Downloading from release..." && \
-    curl -sL "${RELEASE_URL}/dbip-city-lite.mmdb" -o dbip-city-lite.mmdb && \
-    curl -sL "${RELEASE_URL}/dbip-asn-lite.mmdb" -o dbip-asn-lite.mmdb && \
-    ls -la /data/
-
-# ============================================
-# Stage 2: Build Frontend (Node.js + Tailwind)
+# Stage 1: Build Frontend (Node.js + Tailwind)
 # ============================================
 FROM node:20-alpine AS frontend-builder
 
@@ -30,9 +14,9 @@ COPY web/ ./
 RUN npm run build
 
 # ============================================
-# Stage 3: Build Go Binary
+# Stage 2: Build Go Binary
 # ============================================
-FROM golang:1.22-alpine AS go-builder
+FROM golang:1.24-alpine AS go-builder
 
 WORKDIR /app
 
@@ -46,21 +30,20 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Copy built frontend assets from Stage 2
-COPY --from=frontend-builder /app/web/dist ./cmd/ip-lookup/static/
+# Copy built frontend assets from Stage 1
+COPY --from=frontend-builder /app/web/dist ./cmd/ipwhere/static/
 
-# Copy MMDB databases from Stage 1 for embedding reference
-# (We'll actually copy them to runtime, but need them in same location for path resolution)
+# Ensure data directory exists (databases will be copied at runtime stage)
 RUN mkdir -p /app/data
 
 # Build with optimizations for multiple architectures
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
 ENV CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH}
-RUN go build -ldflags="-w -s" -o /app/ip-lookup ./cmd/ip-lookup
+RUN go build -ldflags="-w -s" -o /app/ipwhere ./cmd/ipwhere
 
 # ============================================
-# Stage 4: Runtime (Minimal Image)
+# Stage 3: Runtime (Minimal Image)
 # ============================================
 FROM alpine:3.19 AS runtime
 
@@ -73,10 +56,11 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 
 # Copy binary from build stage
-COPY --from=go-builder /app/ip-lookup .
+COPY --from=go-builder /app/ipwhere .
 
-# Copy MMDB databases from download stage
-COPY --from=downloader /data/*.mmdb ./data/
+# Copy MMDB databases from build context (downloaded by Makefile)
+# This avoids downloading per-architecture in multi-arch builds
+COPY data/*.mmdb ./data/
 
 # Set ownership
 RUN chown -R appuser:appgroup /app
@@ -97,5 +81,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
     CMD wget --quiet --tries=1 --spider http://localhost:8080/health || exit 1
 
 # Run
-ENTRYPOINT ["./ip-lookup"]
+ENTRYPOINT ["./ipwhere"]
 CMD ["-l", ":8080"]

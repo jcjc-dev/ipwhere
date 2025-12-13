@@ -1,4 +1,4 @@
-module github.com/ip-lookup/ip-lookup
+module github.com/Shoyu-Dev/ipwhere
 
 go 1.24.5
 

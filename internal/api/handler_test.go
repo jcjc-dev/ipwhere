@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Shoyu-Dev/ipwhere/internal/geo"
 	"github.com/go-chi/chi/v5"
-	"github.com/ip-lookup/ip-lookup/internal/geo"
 )
 
 // MockGeoReader implements geo.ReaderInterface for testing

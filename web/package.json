@@ -1,7 +1,7 @@
 {
-  "name": "ip-lookup-frontend",
+  "name": "ipwhere-frontend",
   "version": "1.0.0",
-  "description": "Frontend for IP Lookup service",
+  "description": "Frontend for ipwhere IP geolocation service",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -24,9 +24,8 @@ vendor/
 .DS_Store
 Thumbs.db
 
-# Local data (will be downloaded in container)
-data/
-*.mmdb
+# MMDB databases are now provided by Makefile (not downloaded in container)
+# Keep data/ in build context for multi-arch builds
 
 # Test files
 *_test.go

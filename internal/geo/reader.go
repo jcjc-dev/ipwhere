@@ -11,6 +11,7 @@ import (
 // IPInfo represents the complete IP geolocation information
 type IPInfo struct {
 	IP           string   `json:"ip"`
+	Hostname     string   `json:"hostname,omitempty"`
 	Country      string   `json:"country,omitempty"`
 	ISOCode      string   `json:"iso_code,omitempty"`
 	InEU         bool     `json:"in_eu,omitempty"`
@@ -99,6 +100,17 @@ func (r *Reader) Lookup(ip net.IP) (*IPInfo, error) {
 		info.Organization = asn.AutonomousSystemOrganization
 	}
 
+	// Reverse DNS lookup for hostname
+	names, err := net.LookupAddr(ip.String())
+	if err == nil && len(names) > 0 {
+		// Remove trailing dot from hostname if present
+		hostname := names[0]
+		if len(hostname) > 0 && hostname[len(hostname)-1] == '.' {
+			hostname = hostname[:len(hostname)-1]
+		}
+		info.Hostname = hostname
+	}
+
 	return info, nil
 }
 
@@ -132,6 +144,7 @@ func (info *IPInfo) FilterFields(fields []string) map[string]interface{} {
 	result["attribution"] = info.Attribution
 
 	fieldMap := map[string]interface{}{
+		"hostname":     info.Hostname,
 		"country":      info.Country,
 		"iso_code":     info.ISOCode,
 		"in_eu":        info.InEU,

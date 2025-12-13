@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Shoyu-Dev/ipwhere/internal/geo"
 	"github.com/go-chi/chi/v5"
-	"github.com/ip-lookup/ip-lookup/internal/geo"
 )
 
 // Handler holds the dependencies for HTTP handlers
@@ -80,7 +80,7 @@ func getClientIP(r *http.Request) string {
 // @Accept       json
 // @Produce      json
 // @Param        ip      query     string  false  "IP address to lookup (defaults to client IP)"
-// @Param        return  query     []string  false  "Fields to return (can be repeated). Valid values: country, iso_code, in_eu, city, region, latitude, longitude, timezone, asn, organization"
+// @Param        return  query     []string  false  "Fields to return (can be repeated). Valid values: hostname, country, iso_code, in_eu, city, region, latitude, longitude, timezone, asn, organization"
 // @Success      200     {object}  geo.IPInfo
 // @Failure      400     {object}  ErrorResponse
 // @Failure      500     {object}  ErrorResponse
@@ -135,8 +135,41 @@ func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Debug godoc
+// @Summary      Debug request headers
+// @Description  Returns all request headers and connection info for debugging
+// @Tags         debug
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Router       /api/debug [get]
+func (h *Handler) Debug(w http.ResponseWriter, r *http.Request) {
+	headers := make(map[string]string)
+	for name, values := range r.Header {
+		headers[name] = values[0]
+	}
+
+	debugInfo := map[string]interface{}{
+		"remoteAddr":       r.RemoteAddr,
+		"host":             r.Host,
+		"requestURI":       r.RequestURI,
+		"headers":          headers,
+		"xForwardedFor":    r.Header.Get("X-Forwarded-For"),
+		"xRealIP":          r.Header.Get("X-Real-IP"),
+		"xAzureClientIP":   r.Header.Get("X-Azure-ClientIP"),
+		"xOriginalHost":    r.Header.Get("X-Original-Host"),
+		"xClientIP":        r.Header.Get("X-Client-IP"),
+		"cfConnectingIP":   r.Header.Get("CF-Connecting-IP"),
+		"trueClientIP":     r.Header.Get("True-Client-IP"),
+		"forwardedHeader":  r.Header.Get("Forwarded"),
+		"detectedClientIP": getClientIP(r),
+	}
+
+	writeJSON(w, http.StatusOK, debugInfo)
+}
+
 // SetupRoutes configures the API routes
 func (h *Handler) SetupRoutes(r chi.Router) {
 	r.Get("/api/ip", h.IPLookup)
+	r.Get("/api/debug", h.Debug)
 	r.Get("/health", h.Health)
 }

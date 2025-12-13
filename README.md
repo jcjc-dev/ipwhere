@@ -1,10 +1,11 @@
-# IP Lookup
+# ipwhere
 
 An all-in-one IP geolocation lookup server inspired by [echoip](https://github.com/mpolden/echoip). This project provides a simple, self-hosted solution for looking up IP address information including country, city, coordinates, timezone, and ASN data.
 
 ## Features
 
 - 🌍 **IP Geolocation**: Look up country, city, region, coordinates, and timezone for any IP address
+- 🗺️ **Interactive Map**: View IP locations on an OpenStreetMap-based map
 - 🏢 **ASN Information**: Get Autonomous System Number and organization details
 - 🔌 **RESTful API**: Clean JSON API with selective field returns
 - 📖 **OpenAPI/Swagger**: Auto-generated API documentation
@@ -30,25 +31,25 @@ The DB-IP Lite databases are licensed under [Creative Commons Attribution 4.0 In
 
 ```bash
 # Run with frontend enabled (default)
-docker run -p 8080:8080 ghcr.io/shoyu-dev/ip-lookup:latest
+docker run -p 8080:8080 ghcr.io/shoyu-dev/ipwhere:latest
 
 # Run in headless mode (API only)
-docker run -p 8080:8080 -e HEADLESS=true ghcr.io/shoyu-dev/ip-lookup:latest
+docker run -p 8080:8080 -e HEADLESS=true ghcr.io/shoyu-dev/ipwhere:latest
 ```
 
 ### Building from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/Shoyu-Dev/ip-lookup.git
-cd ip-lookup
+git clone https://github.com/Shoyu-Dev/ipwhere.git
+cd ipwhere
 
 # Build and run with Docker
-docker build -t ip-lookup .
-docker run -p 8080:8080 ip-lookup
+docker build -t ipwhere .
+docker run -p 8080:8080 ipwhere
 
 # Or build multi-arch images
-docker buildx build --platform linux/amd64,linux/arm64 -t ip-lookup .
+docker buildx build --platform linux/amd64,linux/arm64 -t ipwhere .
 ```
 
 ## API Usage
@@ -165,7 +166,7 @@ cd web && npm test
 cd web && npm run build && cd ..
 
 # Build Go binary (frontend must be built first)
-go build -o ip-lookup ./cmd/ip-lookup
+go build -o ipwhere ./cmd/ip-lookup
 
 # Generate Swagger docs
 swag init -g cmd/ip-lookup/main.go

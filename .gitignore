@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-/ip-lookup
+/ipwhere
 
 # Test binary, built with `go test -c`
 *.test
@@ -34,8 +34,9 @@ web/node_modules/
 
 # Build outputs
 web/dist/
-static/
 dist/
+cmd/*/static/*
+!cmd/*/static/.gitkeep
 
 # MMDB database files (downloaded at build time)
 data/

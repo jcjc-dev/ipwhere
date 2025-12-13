@@ -1,16 +1,16 @@
-// Package main IP Lookup API
+// Package main ipwhere API
 //
 // An all-in-one IP geolocation lookup server.
 //
-//	@title			IP Lookup API
+//	@title			ipwhere API
 //	@version		1.0
 //	@description	IP geolocation lookup service using DB-IP database
 //
-//	@contact.name	IP Lookup
-//	@contact.url	https://github.com/ip-lookup/ip-lookup
+//	@contact.name	ipwhere
+//	@contact.url	https://github.com/Shoyu-Dev/ipwhere
 //
 //	@license.name	MIT (Code) / CC BY 4.0 (Data)
-//	@license.url	https://github.com/ip-lookup/ip-lookup/blob/main/LICENSE
+//	@license.url	https://github.com/Shoyu-Dev/ipwhere/blob/main/LICENSE
 //
 //	@host			localhost:8080
 //	@BasePath		/
@@ -25,9 +25,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Shoyu-Dev/ipwhere/internal/api"
+	"github.com/Shoyu-Dev/ipwhere/internal/geo"
 	"github.com/go-chi/chi/v5"
-	"github.com/ip-lookup/ip-lookup/internal/api"
-	"github.com/ip-lookup/ip-lookup/internal/geo"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 

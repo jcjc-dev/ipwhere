@@ -3,24 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IP Lookup - IP Geolocation Service</title>
+    <title>ipwhere - IP Geolocation Service</title>
     <meta name="description" content="Look up IP address geolocation information including country, city, coordinates, timezone, and ASN data." />
     <link rel="stylesheet" href="./styles.css" />
+    <!-- Leaflet CSS for OpenStreetMap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   </head>
   <body>
     <div id="app" class="min-h-screen flex flex-col">
       <!-- Header -->
-      <header class="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-8">
-        <div class="container mx-auto px-4">
-          <h1 class="text-3xl md:text-4xl font-bold text-center">IP Lookup</h1>
-          <p class="text-primary-100 text-center mt-2">IP Geolocation Service</p>
+      <header class="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-10">
+        <div class="container mx-auto px-4 text-center">
+          <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">ipwhere</h1>
+          <p class="text-primary-100 text-lg md:text-xl mt-3 font-medium">Discover the location of any IP address</p>
         </div>
       </header>
 
       <!-- Main Content -->
       <main class="flex-1 container mx-auto px-4 py-8">
         <!-- Search Section -->
-        <div class="max-w-2xl mx-auto mb-8">
+        <div class="max-w-4xl mx-auto mb-8">
           <div class="card">
             <form id="lookup-form" class="flex flex-col sm:flex-row gap-4">
               <input
@@ -37,96 +39,120 @@
           </div>
         </div>
 
-        <!-- Results Section -->
-        <div id="results" class="max-w-2xl mx-auto hidden">
-          <div class="card">
-            <!-- IP Header -->
-            <div class="text-center pb-4 border-b border-gray-200 mb-4">
-              <p class="text-sm text-gray-500 uppercase tracking-wide">Your IP Address</p>
-              <p id="result-ip" class="text-3xl font-bold text-primary-600 mt-1">-</p>
-            </div>
+        <!-- Results Section - Two Column Layout -->
+        <div id="results" class="max-w-6xl mx-auto hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <!-- Left Column - IP Information -->
+            <div class="card">
+              <!-- IP Header -->
+              <div class="text-center pb-6 border-b border-gray-200 mb-6">
+                <p id="result-label" class="text-base font-semibold text-gray-600 uppercase tracking-wider">Your IP Address</p>
+                <div class="relative inline-block group mt-2">
+                  <p id="result-ip" class="text-4xl font-bold text-primary-600">-</p>
+                  <button id="copy-ip-btn" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-gray-100 rounded-lg" title="Copy IP address" aria-label="Copy IP address">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
-            <!-- Country Information -->
-            <div class="mb-6">
-              <h2 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
-                <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Country Information
-              </h2>
-              <div class="bg-gray-50 rounded-lg p-4">
-                <div class="info-row">
-                  <span class="info-label">Country</span>
-                  <span id="result-country" class="info-value">-</span>
+              <!-- Country Information -->
+              <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Country Information
+                </h2>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="info-row">
+                    <span class="info-label">Country</span>
+                    <span id="result-country" class="info-value">-</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">ISO Code</span>
+                    <span id="result-iso-code" class="info-value">-</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">In EU</span>
+                    <span id="result-in-eu" class="info-value">-</span>
+                  </div>
                 </div>
-                <div class="info-row">
-                  <span class="info-label">ISO Code</span>
-                  <span id="result-iso-code" class="info-value">-</span>
+              </div>
+
+              <!-- City Information -->
+              <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  City Information
+                </h2>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="info-row">
+                    <span class="info-label">City</span>
+                    <span id="result-city" class="info-value">-</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Region</span>
+                    <span id="result-region" class="info-value">-</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Coordinates</span>
+                    <span id="result-coordinates" class="info-value">-</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Timezone</span>
+                    <span id="result-timezone" class="info-value">-</span>
+                  </div>
                 </div>
-                <div class="info-row">
-                  <span class="info-label">In EU</span>
-                  <span id="result-in-eu" class="info-value">-</span>
+              </div>
+
+              <!-- ASN Information -->
+              <div>
+                <h2 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                  </svg>
+                  ASN Information
+                </h2>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="info-row">
+                    <span class="info-label">ASN</span>
+                    <span id="result-asn" class="info-value">-</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Organization</span>
+                    <span id="result-organization" class="info-value">-</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Hostname</span>
+                    <span id="result-hostname" class="info-value">-</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- City Information -->
-            <div class="mb-6">
+            <!-- Right Column - Map -->
+            <div id="map-container" class="card">
               <h2 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
                 <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
-                City Information
+                Location Map
               </h2>
-              <div class="bg-gray-50 rounded-lg p-4">
-                <div class="info-row">
-                  <span class="info-label">City</span>
-                  <span id="result-city" class="info-value">-</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Region</span>
-                  <span id="result-region" class="info-value">-</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Latitude</span>
-                  <span id="result-latitude" class="info-value">-</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Longitude</span>
-                  <span id="result-longitude" class="info-value">-</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Timezone</span>
-                  <span id="result-timezone" class="info-value">-</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- ASN Information -->
-            <div>
-              <h2 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
-                <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
-                </svg>
-                ASN Information
-              </h2>
-              <div class="bg-gray-50 rounded-lg p-4">
-                <div class="info-row">
-                  <span class="info-label">ASN</span>
-                  <span id="result-asn" class="info-value">-</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Organization</span>
-                  <span id="result-organization" class="info-value">-</span>
-                </div>
-              </div>
+              <div id="map" class="w-full aspect-square rounded-lg overflow-hidden bg-gray-100"></div>
+              <p class="text-xs text-gray-500 mt-3 text-center">
+                Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline">OpenStreetMap</a> contributors
+              </p>
             </div>
           </div>
         </div>
 
         <!-- Error Section -->
-        <div id="error" class="max-w-2xl mx-auto hidden">
+        <div id="error" class="max-w-4xl mx-auto hidden">
           <div class="card bg-red-50 border-red-200">
             <div class="flex items-center text-red-700">
               <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,7 +164,7 @@
         </div>
 
         <!-- Loading Section -->
-        <div id="loading" class="max-w-2xl mx-auto hidden">
+        <div id="loading" class="max-w-4xl mx-auto hidden">
           <div class="card text-center">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
             <p class="text-gray-500 mt-4">Loading...</p>
@@ -149,25 +175,38 @@
       <!-- Footer with Attribution -->
       <footer class="bg-gray-100 border-t border-gray-200 py-6">
         <div class="container mx-auto px-4 text-center">
-          <p class="text-gray-600 text-sm">
-            <a href="https://db-ip.com" class="text-primary-600 hover:text-primary-700 font-medium" target="_blank" rel="noopener noreferrer">
-              IP Geolocation by DB-IP
+          <p class="text-gray-700 text-sm font-semibold">
+            IPWhere by 
+            <a href="https://github.com/Shoyu-Dev" class="text-primary-600 hover:text-primary-700" target="_blank" rel="noopener noreferrer">
+              Shoyu-Dev
             </a>
           </p>
           <p class="text-gray-500 text-xs mt-2">
-            Data licensed under 
+            IP data from 
+            <a href="https://db-ip.com" class="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">
+              DB-IP
+            </a>
+            • 
+            <a href="https://github.com/Shoyu-Dev/ipwhere" class="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">
+              View on GitHub
+            </a>
+          </p>
+          <p class="text-gray-400 text-xs mt-1">
+            Data: 
             <a href="https://creativecommons.org/licenses/by/4.0/" class="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">
               CC BY 4.0
             </a>
-            • 
-            <a href="https://github.com/Shoyu-Dev/ip-lookup" class="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">
-              View on GitHub
+            • Code: 
+            <a href="https://github.com/Shoyu-Dev/ipwhere/blob/main/LICENSE" class="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">
+              MIT License
             </a>
           </p>
         </div>
       </footer>
     </div>
 
+    <!-- Leaflet JS for OpenStreetMap -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>
