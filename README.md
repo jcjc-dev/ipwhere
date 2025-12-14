@@ -1,4 +1,4 @@
-# ipwhere
+# IPWhere
 
 An all-in-one IP geolocation lookup server inspired by [echoip](https://github.com/mpolden/echoip). This project provides a simple, self-hosted solution for looking up IP address information including country, city, coordinates, timezone, and ASN data.
 
@@ -152,7 +152,7 @@ cd web && npm install && cd ..
 cd web && npm run dev
 
 # Run Go server (in another terminal)
-go run ./cmd/ip-lookup
+go run ./cmd/ipwhere
 
 # Run tests
 go test ./...
@@ -166,10 +166,10 @@ cd web && npm test
 cd web && npm run build && cd ..
 
 # Build Go binary (frontend must be built first)
-go build -o ipwhere ./cmd/ip-lookup
+go build -o ipwhere ./cmd/ipwhere
 
 # Generate Swagger docs
-swag init -g cmd/ip-lookup/main.go
+swag init -g cmd/ipwhere/main.go
 ```
 
 ## License

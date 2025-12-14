@@ -1,12 +1,12 @@
-// Package main ipwhere API
+// Package main IPWhere API
 //
 // An all-in-one IP geolocation lookup server.
 //
-//	@title			ipwhere API
+//	@title			IPWhere API
 //	@version		1.0
 //	@description	IP geolocation lookup service using DB-IP database
 //
-//	@contact.name	ipwhere
+//	@contact.name	IPWhere
 //	@contact.url	https://github.com/Shoyu-Dev/ipwhere
 //
 //	@license.name	MIT (Code) / CC BY 4.0 (Data)
