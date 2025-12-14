@@ -23,17 +23,16 @@ jobs:
     name: Check upstream MMDB release
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      packages: write
+      contents: read
+      packages: read
 
     outputs:
       combined_tag: ${{ steps.combined.outputs.combined_tag }}
+      db_changed: ${{ steps.cmp.outputs.changed }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Determine code version
         id: code
@@ -68,25 +67,56 @@ jobs:
           # compute per-file sha256 and then compute a combined checksum
           (cd data/upstream && sha256sum *.mmdb 2>/dev/null | sort -k2) > data/upstream/file_sha256s.txt || true
           if [ -f data/upstream/file_sha256s.txt ]; then
-            sha256sum data/upstream/file_sha256s.txt | awk '{print $1}' > data/dbip-latest.sha256
+            sha256sum data/upstream/file_sha256s.txt | awk '{print $1}' > db_checksum.txt
           else
-            # no mmdb files found, write empty
-            echo "" > data/dbip-latest.sha256
+            echo "" > db_checksum.txt
           fi
-          echo "dbsha=$(cut -d' ' -f1 data/dbip-latest.sha256)" >> $GITHUB_OUTPUT
-          echo "release_tag=$(cat release_tag.txt)" >> $GITHUB_OUTPUT
+          echo "dbsha=$(cat db_checksum.txt)" >> $GITHUB_OUTPUT
 
-      - name: Compose combined tag (always include DB short)
+      - name: Restore cached DB checksum
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: cached_db_checksum.txt
+          key: db-checksum-${{ steps.dbsum.outputs.dbsha }}
+          restore-keys: |
+            db-checksum-
+
+      - name: Compare with cached DB checksum
+        id: cmp
+        run: |
+          CURRENT_SHA="${{ steps.dbsum.outputs.dbsha }}"
+          if [ -f cached_db_checksum.txt ]; then
+            CACHED_SHA=$(cat cached_db_checksum.txt)
+          else
+            CACHED_SHA=""
+          fi
+          echo "Current DB checksum: $CURRENT_SHA"
+          echo "Cached DB checksum: $CACHED_SHA"
+          if [ "$CURRENT_SHA" = "$CACHED_SHA" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update cached checksum
+        if: steps.cmp.outputs.changed == 'true'
+        run: |
+          echo "${{ steps.dbsum.outputs.dbsha }}" > cached_db_checksum.txt
+
+      - name: Save DB checksum to cache
+        if: steps.cmp.outputs.changed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: cached_db_checksum.txt
+          key: db-checksum-${{ steps.dbsum.outputs.dbsha }}
+
+      - name: Compose combined tag
         id: combined
         run: |
           CODE=${{ steps.code.outputs.code_tag }}
-          # Prefer upstream-computed sha (data/dbip-latest.sha256), fallback to tracked file
-          DBSHA_FULL=""
-          if [ -f data/dbip-latest.sha256 ] && [ -s data/dbip-latest.sha256 ]; then
-            DBSHA_FULL=$(cat data/dbip-latest.sha256)
-          elif [ -f data/dbip-latest.tracked.sha256 ] && [ -s data/dbip-latest.tracked.sha256 ]; then
-            DBSHA_FULL=$(cat data/dbip-latest.tracked.sha256)
-          else
+          DBSHA_FULL="${{ steps.dbsum.outputs.dbsha }}"
+          if [ -z "$DBSHA_FULL" ]; then
             DBSHA_FULL="unknown"
           fi
           DBSHA_SHORT=${DBSHA_FULL:0:8}
@@ -94,63 +124,6 @@ jobs:
           echo "db_sha=$DBSHA_FULL" >> $GITHUB_OUTPUT
           echo "db_sha_short=$DBSHA_SHORT" >> $GITHUB_OUTPUT
           echo "combined_tag=$COMBINED" >> $GITHUB_OUTPUT
-
-      - name: Compare with tracked DB checksum
-        id: cmp
-        run: |
-          TRACKED_FILE=data/dbip-latest.tracked.sha256
-          mkdir -p data
-          if [ -f "$TRACKED_FILE" ]; then
-            echo "tracked=$(cat $TRACKED_FILE)" > tracked.txt
-          else
-            echo "tracked=" > tracked.txt
-          fi
-          echo "current=$(cat data/dbip-latest.sha256)" > current.txt
-          echo "tracked=$(cat tracked.txt)" && echo "current=$(cat current.txt)"
-          if [ "$(cat tracked.txt)" = "$(cat current.txt)" ]; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit updated DB files and tag if changed
-        if: steps.cmp.outputs.changed == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # copy upstream files into data/ (replace existing)
-          cp -a data/upstream/. data/ || true
-
-          DBSHA_FULL=$(cat data/dbip-latest.sha256)
-          DBSHA_SHORT=${DBSHA_FULL:0:8}
-          RELEASE_TAG=$(cat release_tag.txt)
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # update tracked checksum file
-          echo "$DBSHA_FULL" > data/dbip-latest.tracked.sha256
-          git add data/dbip-latest.tracked.sha256
-          # add any mmdb files
-          git add data/*.mmdb || true
-
-          git commit -m "chore(db): update mmdb from mmdb-latest release $RELEASE_TAG (dbsha:$DBSHA_SHORT)" || true
-
-          # determine code version (latest tag or short sha)
-          CODE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "dev-$(git rev-parse --short HEAD)")
-          # sanitize CODE_TAG for tag name
-          CODE_TAG_SAFE=${CODE_TAG}
-
-          NEW_TAG="${CODE_TAG_SAFE}-db-${DBSHA_SHORT}"
-
-          # only create tag if it does not already exist
-          if ! git rev-parse -q --verify "refs/tags/$NEW_TAG" >/dev/null; then
-            git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
-          fi
-
-          # push commit and tag
-          git push origin HEAD:main
-          git push origin "refs/tags/$NEW_TAG"
 
   build-and-push:
     needs: [check-db]
@@ -162,14 +135,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Update workspace to latest main
-        run: |
-          # Ensure we have the latest main (in case check-db pushed changes)
-          git fetch origin main
-          git checkout --force origin/main
 
       - name: Download MMDB databases
         run: make download-db
