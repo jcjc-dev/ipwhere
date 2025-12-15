@@ -29,12 +29,48 @@ The DB-IP Lite databases are licensed under [Creative Commons Attribution 4.0 In
 
 ### Using Docker (Recommended)
 
+#### Server Mode (Web UI + API)
+
 ```bash
 # Run with frontend enabled (default)
 docker run -p 8080:8080 ghcr.io/shoyu-dev/ipwhere:latest
 
 # Run in headless mode (API only)
 docker run -p 8080:8080 -e HEADLESS=true ghcr.io/shoyu-dev/ipwhere:latest
+```
+
+Then open http://localhost:8080 in your browser or use the API.
+
+#### CLI Mode (Direct Lookup)
+
+For quick one-off lookups without starting a server:
+
+```bash
+# Look up an IP address directly
+docker run --rm ghcr.io/shoyu-dev/ipwhere 8.8.8.8
+```
+
+Output:
+```json
+{
+  "ip": "8.8.8.8",
+  "hostname": "dns.google",
+  "country": "United States",
+  "iso_code": "US",
+  "city": "Mountain View",
+  "region": "California",
+  "latitude": 37.422,
+  "longitude": -122.085,
+  "asn": 15169,
+  "organization": "Google LLC",
+  "attribution": "IP Geolocation by DB-IP (https://db-ip.com)"
+}
+```
+
+You can also create a shell alias for convenience:
+```bash
+alias ipwhere='docker run --rm ghcr.io/shoyu-dev/ipwhere'
+ipwhere 1.1.1.1
 ```
 
 ### Building from Source

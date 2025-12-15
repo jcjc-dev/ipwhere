@@ -18,9 +18,12 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"flag"
+	"fmt"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -108,15 +111,31 @@ func main() {
 		log.Fatal("Database files not found. Please provide paths via --city-db and --asn-db flags or CITY_DB_PATH and ASN_DB_PATH environment variables")
 	}
 
-	log.Printf("Using city database: %s", *cityDBPath)
-	log.Printf("Using ASN database: %s", *asnDBPath)
+	// Check if running in CLI mode (IP argument provided)
+	args := flag.Args()
+	cliMode := len(args) > 0
+
+	if !cliMode {
+		log.Printf("Using city database: %s", *cityDBPath)
+		log.Printf("Using ASN database: %s", *asnDBPath)
+	}
 
 	// Initialize geo reader
 	geoReader, err := geo.NewReader(*cityDBPath, *asnDBPath)
 	if err != nil {
+		if cliMode {
+			fmt.Fprintf(os.Stderr, "Error: failed to initialize geo reader: %v\n", err)
+			os.Exit(1)
+		}
 		log.Fatalf("Failed to initialize geo reader: %v", err)
 	}
 	defer geoReader.Close()
+
+	// CLI mode: lookup the IP and print result
+	if cliMode {
+		runCLI(geoReader, args[0])
+		return
+	}
 
 	// Create router
 	r := api.NewRouter()
@@ -174,4 +193,27 @@ func setupFrontend(r *chi.Mux) {
 
 		fileServer.ServeHTTP(w, req)
 	})
+}
+
+// runCLI performs a direct IP lookup and prints the result as JSON
+func runCLI(geoReader *geo.Reader, ipStr string) {
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		fmt.Fprintf(os.Stderr, "Error: invalid IP address: %s\n", ipStr)
+		os.Exit(1)
+	}
+
+	info, err := geoReader.Lookup(ip)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: lookup failed: %v\n", err)
+		os.Exit(1)
+	}
+
+	output, err := json.MarshalIndent(info, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to format output: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(string(output))
 }
