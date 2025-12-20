@@ -207,3 +207,15 @@ jobs:
             io.ipwhere.ci_status=passing
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Create or update GitHub Release for combined tag
+        if: github.event_name != 'pull_request' && needs.check-db.outputs.combined_tag != ''
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ needs.check-db.outputs.combined_tag }}
+          release_name: ${{ needs.check-db.outputs.combined_tag }}
+          body: Automated release for ${{ needs.check-db.outputs.combined_tag }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
