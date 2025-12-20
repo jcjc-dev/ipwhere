@@ -49,6 +49,9 @@ func main() {
 	headless := flag.Bool("H", false, "Run in headless mode (API only, no frontend)")
 	flag.BoolVar(headless, "headless", false, "Run in headless mode (API only, no frontend)")
 
+	enableOnlineFeatures := flag.Bool("online", false, "Enable online features (reverse DNS lookup)")
+	flag.BoolVar(enableOnlineFeatures, "enable-online-features", false, "Enable online features (reverse DNS lookup)")
+
 	cityDBPath := flag.String("city-db", "", "Path to city MMDB database")
 	asnDBPath := flag.String("asn-db", "", "Path to ASN MMDB database")
 
@@ -65,6 +68,11 @@ func main() {
 	if !*headless {
 		headlessEnv := os.Getenv("HEADLESS")
 		*headless = headlessEnv == "true" || headlessEnv == "1"
+	}
+
+	if !*enableOnlineFeatures {
+		onlineEnv := os.Getenv("ENABLE_ONLINE_FEATURES")
+		*enableOnlineFeatures = onlineEnv == "true" || onlineEnv == "1"
 	}
 
 	// Determine database paths
@@ -121,7 +129,7 @@ func main() {
 	}
 
 	// Initialize geo reader
-	geoReader, err := geo.NewReader(*cityDBPath, *asnDBPath)
+	geoReader, err := geo.NewReader(*cityDBPath, *asnDBPath, *enableOnlineFeatures)
 	if err != nil {
 		if cliMode {
 			fmt.Fprintf(os.Stderr, "Error: failed to initialize geo reader: %v\n", err)
@@ -141,7 +149,7 @@ func main() {
 	r := api.NewRouter()
 
 	// Setup API routes
-	handler := api.NewHandler(geoReader)
+	handler := api.NewHandler(geoReader, *enableOnlineFeatures)
 	handler.SetupRoutes(r)
 
 	// Setup Swagger

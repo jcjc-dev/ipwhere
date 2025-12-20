@@ -9,6 +9,8 @@ services:
       - LISTEN_ADDR=:8080
       # Uncomment to run in headless mode (API only)
       # - HEADLESS=true
+      # Uncomment to enable online features (reverse DNS lookup)
+      # - ENABLE_ONLINE_FEATURES=true
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
@@ -28,3 +30,15 @@ services:
     restart: unless-stopped
     profiles:
       - headless
+
+  # Optional: Run with online features enabled
+  ipwhere-online:
+    build: .
+    ports:
+      - "8082:8080"
+    environment:
+      - LISTEN_ADDR=:8080
+      - ENABLE_ONLINE_FEATURES=true
+    restart: unless-stopped
+    profiles:
+      - online

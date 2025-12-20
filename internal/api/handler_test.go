@@ -39,9 +39,13 @@ func (m *MockGeoReader) Close() error {
 	return nil
 }
 
+func (m *MockGeoReader) OnlineFeaturesEnabled() bool {
+	return false
+}
+
 func setupTestRouter() *chi.Mux {
 	r := chi.NewRouter()
-	handler := NewHandler(&MockGeoReader{})
+	handler := NewHandler(&MockGeoReader{}, false)
 	handler.SetupRoutes(r)
 	return r
 }

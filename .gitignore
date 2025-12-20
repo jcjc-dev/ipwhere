@@ -55,3 +55,9 @@ npm-debug.log*
 docs/docs.go
 docs/swagger.json
 docs/swagger.yaml
+
+# Infrastructure
+/infra
+
+# Secrets
+.secrets

@@ -20,6 +20,15 @@ export interface ErrorResponse {
   attribution: string;
 }
 
+export interface FeaturesResponse {
+  onlineFeatures: boolean;
+}
+
+// Feature flags state
+let featureFlags: FeaturesResponse = {
+  onlineFeatures: false,
+};
+
 // Leaflet types (loaded globally via CDN)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const L: any;
@@ -42,6 +51,19 @@ export async function lookupIP(ip?: string): Promise<IPInfo> {
   }
   
   return response.json();
+}
+
+export async function fetchFeatures(): Promise<FeaturesResponse> {
+  try {
+    const response = await fetch('/api/features');
+    if (response.ok) {
+      return response.json();
+    }
+  } catch (error) {
+    console.error('Failed to fetch features:', error);
+  }
+  // Return defaults if fetch fails
+  return { onlineFeatures: false };
 }
 
 // DOM Helpers
@@ -148,7 +170,14 @@ function showResults(data: IPInfo, isOwnIP: boolean): void {
   setText('result-timezone', data.timezone);
   setText('result-asn', data.asn ? `AS${data.asn}` : undefined);
   setText('result-organization', data.organization);
-  setText('result-hostname', data.hostname);
+  
+  // Only show hostname if online features are enabled
+  if (featureFlags.onlineFeatures) {
+    setText('result-hostname', data.hostname);
+    showElement('hostname-row');
+  } else {
+    hideElement('hostname-row');
+  }
   
   showElement('results');
 
@@ -247,7 +276,10 @@ function getIPFromURL(): string | undefined {
 }
 
 // Initialize
-function init(): void {
+async function init(): Promise<void> {
+  // Fetch feature flags first
+  featureFlags = await fetchFeatures();
+  
   const form = getElementById<HTMLFormElement>('lookup-form');
   if (form) {
     form.addEventListener('submit', handleFormSubmit);

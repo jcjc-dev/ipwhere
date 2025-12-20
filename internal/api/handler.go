@@ -12,13 +12,15 @@ import (
 
 // Handler holds the dependencies for HTTP handlers
 type Handler struct {
-	geoReader geo.ReaderInterface
+	geoReader            geo.ReaderInterface
+	enableOnlineFeatures bool
 }
 
 // NewHandler creates a new Handler with the given geo reader
-func NewHandler(geoReader geo.ReaderInterface) *Handler {
+func NewHandler(geoReader geo.ReaderInterface, enableOnlineFeatures bool) *Handler {
 	return &Handler{
-		geoReader: geoReader,
+		geoReader:            geoReader,
+		enableOnlineFeatures: enableOnlineFeatures,
 	}
 }
 
@@ -167,9 +169,28 @@ func (h *Handler) Debug(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, debugInfo)
 }
 
+// FeaturesResponse represents the feature flags response
+type FeaturesResponse struct {
+	OnlineFeatures bool `json:"onlineFeatures"`
+}
+
+// Features godoc
+// @Summary      Get feature flags
+// @Description  Returns the enabled feature flags for the service
+// @Tags         features
+// @Produce      json
+// @Success      200  {object}  FeaturesResponse
+// @Router       /api/features [get]
+func (h *Handler) Features(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, FeaturesResponse{
+		OnlineFeatures: h.enableOnlineFeatures,
+	})
+}
+
 // SetupRoutes configures the API routes
 func (h *Handler) SetupRoutes(r chi.Router) {
 	r.Get("/api/ip", h.IPLookup)
 	r.Get("/api/debug", h.Debug)
+	r.Get("/api/features", h.Features)
 	r.Get("/health", h.Health)
 }

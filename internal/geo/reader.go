@@ -30,19 +30,21 @@ const Attribution = "IP Geolocation by DB-IP (https://db-ip.com)"
 
 // Reader wraps the geoip2 database readers
 type Reader struct {
-	cityDB *geoip2.Reader
-	asnDB  *geoip2.Reader
-	mu     sync.RWMutex
+	cityDB               *geoip2.Reader
+	asnDB                *geoip2.Reader
+	enableOnlineFeatures bool
+	mu                   sync.RWMutex
 }
 
 // ReaderInterface defines the interface for geo lookups (useful for testing)
 type ReaderInterface interface {
 	Lookup(ip net.IP) (*IPInfo, error)
 	Close() error
+	OnlineFeaturesEnabled() bool
 }
 
 // NewReader creates a new geo reader from the given database paths
-func NewReader(cityDBPath, asnDBPath string) (*Reader, error) {
+func NewReader(cityDBPath, asnDBPath string, enableOnlineFeatures bool) (*Reader, error) {
 	cityDB, err := geoip2.Open(cityDBPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open city database: %w", err)
@@ -55,8 +57,9 @@ func NewReader(cityDBPath, asnDBPath string) (*Reader, error) {
 	}
 
 	return &Reader{
-		cityDB: cityDB,
-		asnDB:  asnDB,
+		cityDB:               cityDB,
+		asnDB:                asnDB,
+		enableOnlineFeatures: enableOnlineFeatures,
 	}, nil
 }
 
@@ -100,15 +103,17 @@ func (r *Reader) Lookup(ip net.IP) (*IPInfo, error) {
 		info.Organization = asn.AutonomousSystemOrganization
 	}
 
-	// Reverse DNS lookup for hostname
-	names, err := net.LookupAddr(ip.String())
-	if err == nil && len(names) > 0 {
-		// Remove trailing dot from hostname if present
-		hostname := names[0]
-		if len(hostname) > 0 && hostname[len(hostname)-1] == '.' {
-			hostname = hostname[:len(hostname)-1]
+	// Reverse DNS lookup for hostname (only if online features are enabled)
+	if r.enableOnlineFeatures {
+		names, err := net.LookupAddr(ip.String())
+		if err == nil && len(names) > 0 {
+			// Remove trailing dot from hostname if present
+			hostname := names[0]
+			if len(hostname) > 0 && hostname[len(hostname)-1] == '.' {
+				hostname = hostname[:len(hostname)-1]
+			}
+			info.Hostname = hostname
 		}
-		info.Hostname = hostname
 	}
 
 	return info, nil
@@ -135,6 +140,11 @@ func (r *Reader) Close() error {
 		return fmt.Errorf("errors closing databases: %v", errs)
 	}
 	return nil
+}
+
+// OnlineFeaturesEnabled returns whether online features are enabled
+func (r *Reader) OnlineFeaturesEnabled() bool {
+	return r.enableOnlineFeatures
 }
 
 // FilterFields returns a new IPInfo with only the requested fields

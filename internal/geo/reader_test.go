@@ -34,6 +34,10 @@ func (m *MockReader) Close() error {
 	return nil
 }
 
+func (m *MockReader) OnlineFeaturesEnabled() bool {
+	return false
+}
+
 func floatPtr(f float64) *float64 {
 	return &f
 }
