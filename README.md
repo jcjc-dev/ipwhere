@@ -4,6 +4,8 @@
 
 An all-in-one IP geolocation lookup server inspired by [echoip](https://github.com/mpolden/echoip). This project provides a simple, self-hosted solution for looking up IP address information including country, city, coordinates, timezone, and ASN data.
 
+**🌐 https://ip.shoyu.dev**
+
 ## Features
 
 - 🌍 **IP Geolocation**: Look up country, city, region, coordinates, and timezone for any IP address
@@ -55,6 +57,8 @@ docker buildx build --platform linux/amd64,linux/arm64 -t ipwhere .
 ```
 
 ## API Usage
+
+> 💡 **Tip:** Try these API calls at https://ip.shoyu.dev — just replace `localhost:8080` with `ip.shoyu.dev`. Excessive usage may be blocked.
 
 ### Get Your IP Information
 
