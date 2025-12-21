@@ -1,5 +1,7 @@
 # IPWhere
 
+[![Build and Publish Docker Image](https://github.com/Shoyu-Dev/ipwhere/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/Shoyu-Dev/ipwhere/actions/workflows/docker-publish.yml)
+
 An all-in-one IP geolocation lookup server inspired by [echoip](https://github.com/mpolden/echoip). This project provides a simple, self-hosted solution for looking up IP address information including country, city, coordinates, timezone, and ASN data.
 
 ## Features
