@@ -45,34 +45,30 @@ func writeError(w http.ResponseWriter, status int, message string) {
 	})
 }
 
-// getClientIP extracts the client IP from the request
+// getClientIP extracts the client IP from the request.
+// It checks proxy headers (X-Forwarded-For, X-Real-IP) before falling back to RemoteAddr.
 func getClientIP(r *http.Request) string {
 	// Check X-Forwarded-For header first (for proxies)
-	xff := r.Header.Get("X-Forwarded-For")
-	if xff != "" {
-		ips := strings.Split(xff, ",")
-		if len(ips) > 0 {
-			ip := strings.TrimSpace(ips[0])
-			if parsedIP := net.ParseIP(ip); parsedIP != nil {
-				return ip
-			}
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// Take the first IP in the chain (original client)
+		if idx := strings.IndexByte(xff, ','); idx != -1 {
+			xff = xff[:idx]
+		}
+		if ip := strings.TrimSpace(xff); net.ParseIP(ip) != nil {
+			return ip
 		}
 	}
 
 	// Check X-Real-IP header
-	xri := r.Header.Get("X-Real-IP")
-	if xri != "" {
-		if parsedIP := net.ParseIP(xri); parsedIP != nil {
-			return xri
-		}
+	if xri := r.Header.Get("X-Real-IP"); xri != "" && net.ParseIP(xri) != nil {
+		return xri
 	}
 
 	// Fall back to RemoteAddr
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return r.RemoteAddr
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		return host
 	}
-	return host
+	return r.RemoteAddr
 }
 
 // IPLookup godoc
