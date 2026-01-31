@@ -55,7 +55,24 @@ jobs:
         id: release
         run: |
           API_URL="https://api.github.com/repos/Shoyu-Dev/mmdb-latest/releases/tags/dbip-latest"
-          curl -sSf -H "Accept: application/vnd.github+json" "$API_URL" -o release.json
+          HTTP_CODE=$(curl -sS -w "%{http_code}" -H "Accept: application/vnd.github+json" "$API_URL" -o release.json)
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Warning: Could not fetch release (HTTP $HTTP_CODE), using fallback"
+            echo "release_tag=unknown" >> $GITHUB_OUTPUT
+            echo "" > asset_urls.txt
+            exit 0
+          fi
+          
+          # Check if assets exist
+          ASSET_COUNT=$(jq -r '.assets | length' release.json)
+          if [ "$ASSET_COUNT" = "0" ] || [ "$ASSET_COUNT" = "null" ]; then
+            echo "Warning: Release has no assets"
+            echo "release_tag=$(jq -r '.tag_name // "unknown"' release.json)" >> $GITHUB_OUTPUT
+            echo "" > asset_urls.txt
+            exit 0
+          fi
+          
           jq -r '.tag_name' release.json > release_tag.txt
           jq -r '.assets[].browser_download_url' release.json > asset_urls.txt
           echo "release_tag=$(cat release_tag.txt)" >> $GITHUB_OUTPUT
@@ -65,7 +82,17 @@ jobs:
         run: |
           mkdir -p data/upstream
           rm -f data/upstream/* || true
+          
+          # Skip download if no assets available
+          if [ ! -s asset_urls.txt ]; then
+            echo "No assets to download, using empty checksum"
+            echo "" > db_checksum.txt
+            echo "dbsha=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
           while read -r url; do
+            [ -z "$url" ] && continue
             fname="$(basename "$url")"
             curl -L -sSf "$url" -o "data/upstream/$fname"
           done < asset_urls.txt
