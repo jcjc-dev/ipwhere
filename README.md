@@ -19,7 +19,7 @@ An all-in-one IP geolocation lookup server inspired by [echoip](https://github.c
 
 ## Data Source
 
-This project uses the [DB-IP Lite](https://db-ip.com/db/lite.php) databases, which are less restrictive than alternatives and can be used for any scenarios you see fit. The MMDB database files are fetched from [Shoyu-Dev/mmdb-latest](https://github.com/Shoyu-Dev/mmdb-latest) which provides daily-updated releases.
+This project uses the [DB-IP Lite](https://db-ip.com/db/lite.php) databases, which are less restrictive than alternatives and can be used for any scenarios you see fit. The MMDB database files are fetched from [jcjc-dev/mmdb-latest](https://github.com/jcjc-dev/mmdb-latest) which provides daily-updated releases.
 
 ### Attribution
 
@@ -224,4 +224,4 @@ This project's source code is licensed under the [MIT License](LICENSE).
 
 - [echoip](https://github.com/mpolden/echoip) - Inspiration for this project
 - [DB-IP](https://db-ip.com) - IP geolocation database provider
-- [Shoyu-Dev/mmdb-latest](https://github.com/Shoyu-Dev/mmdb-latest) - MMDB database releases
+- [jcjc-dev/mmdb-latest](https://github.com/jcjc-dev/mmdb-latest) - MMDB database releases

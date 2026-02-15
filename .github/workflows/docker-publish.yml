@@ -54,7 +54,7 @@ jobs:
       - name: Query upstream release
         id: release
         run: |
-          API_URL="https://api.github.com/repos/Shoyu-Dev/mmdb-latest/releases/tags/dbip-latest"
+          API_URL="https://api.github.com/repos/jcjc-dev/mmdb-latest/releases/tags/dbip-latest"
           HTTP_CODE=$(curl -sSL -w "%{http_code}" -H "Accept: application/vnd.github+json" "$API_URL" -o release.json)
           
           if [ "$HTTP_CODE" != "200" ]; then

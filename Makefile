@@ -7,7 +7,7 @@ DOCKER_TAG=latest
 DATA_DIR=data
 CITY_DB=$(DATA_DIR)/dbip-city-lite.mmdb
 ASN_DB=$(DATA_DIR)/dbip-asn-lite.mmdb
-MMDB_RELEASE_URL=https://github.com/Shoyu-Dev/mmdb-latest/releases/download/dbip-latest
+MMDB_RELEASE_URL=https://github.com/jcjc-dev/mmdb-latest/releases/download/dbip-latest
 
 all: frontend backend
 
