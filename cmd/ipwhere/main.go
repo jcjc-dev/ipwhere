@@ -7,10 +7,10 @@
 //	@description	IP geolocation lookup service using DB-IP database
 //
 //	@contact.name	IPWhere
-//	@contact.url	https://github.com/Shoyu-Dev/ipwhere
+//	@contact.url	https://github.com/jcjc-dev/ipwhere
 //
 //	@license.name	MIT (Code) / CC BY 4.0 (Data)
-//	@license.url	https://github.com/Shoyu-Dev/ipwhere/blob/main/LICENSE
+//	@license.url	https://github.com/jcjc-dev/ipwhere/blob/main/LICENSE
 //
 //	@host			localhost:8080
 //	@BasePath		/
@@ -28,8 +28,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Shoyu-Dev/ipwhere/internal/api"
-	"github.com/Shoyu-Dev/ipwhere/internal/geo"
+	"github.com/jcjc-dev/ipwhere/internal/api"
+	"github.com/jcjc-dev/ipwhere/internal/geo"
 	"github.com/go-chi/chi/v5"
 	httpSwagger "github.com/swaggo/http-swagger"
 )

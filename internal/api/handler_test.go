@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Shoyu-Dev/ipwhere/internal/geo"
+	"github.com/jcjc-dev/ipwhere/internal/geo"
 	"github.com/go-chi/chi/v5"
 )
 

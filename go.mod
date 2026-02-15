@@ -1,4 +1,4 @@
-module github.com/Shoyu-Dev/ipwhere
+module github.com/jcjc-dev/ipwhere
 
 go 1.24.5
 

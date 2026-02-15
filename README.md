@@ -1,6 +1,6 @@
 # IPWhere
 
-[![Build and Publish Docker Image](https://github.com/Shoyu-Dev/ipwhere/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/Shoyu-Dev/ipwhere/actions/workflows/docker-publish.yml)
+[![Build and Publish Docker Image](https://github.com/jcjc-dev/ipwhere/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/jcjc-dev/ipwhere/actions/workflows/docker-publish.yml)
 
 An all-in-one IP geolocation lookup server inspired by [echoip](https://github.com/mpolden/echoip). This project provides a simple, self-hosted solution for looking up IP address information including country, city, coordinates, timezone, and ASN data.
 
@@ -37,10 +37,10 @@ The DB-IP Lite databases are licensed under [Creative Commons Attribution 4.0 In
 
 ```bash
 # Run with frontend enabled (default)
-docker run -p 8080:8080 ghcr.io/shoyu-dev/ipwhere:latest
+docker run -p 8080:8080 ghcr.io/jcjc-dev/ipwhere:latest
 
 # Run in headless mode (API only)
-docker run -p 8080:8080 -e HEADLESS=true ghcr.io/shoyu-dev/ipwhere:latest
+docker run -p 8080:8080 -e HEADLESS=true ghcr.io/jcjc-dev/ipwhere:latest
 ```
 
 Then open http://localhost:8080 in your browser or use the API.
@@ -51,7 +51,7 @@ For quick one-off lookups without starting a server:
 
 ```bash
 # Look up an IP address directly
-docker run --rm ghcr.io/shoyu-dev/ipwhere 8.8.8.8
+docker run --rm ghcr.io/jcjc-dev/ipwhere 8.8.8.8
 ```
 
 Output:
@@ -73,7 +73,7 @@ Output:
 
 You can also create a shell alias for convenience:
 ```bash
-alias ipwhere='docker run --rm ghcr.io/shoyu-dev/ipwhere'
+alias ipwhere='docker run --rm ghcr.io/jcjc-dev/ipwhere'
 ipwhere 1.1.1.1
 ```
 
@@ -81,7 +81,7 @@ ipwhere 1.1.1.1
 
 ```bash
 # Clone the repository
-git clone https://github.com/Shoyu-Dev/ipwhere.git
+git clone https://github.com/jcjc-dev/ipwhere.git
 cd ipwhere
 
 # Build and run with Docker
