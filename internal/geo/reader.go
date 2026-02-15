@@ -3,6 +3,7 @@ package geo
 import (
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/oschwald/geoip2-golang"
@@ -107,12 +108,8 @@ func (r *Reader) Lookup(ip net.IP) (*IPInfo, error) {
 	if r.enableOnlineFeatures {
 		names, err := net.LookupAddr(ip.String())
 		if err == nil && len(names) > 0 {
-			// Remove trailing dot from hostname if present
-			hostname := names[0]
-			if len(hostname) > 0 && hostname[len(hostname)-1] == '.' {
-				hostname = hostname[:len(hostname)-1]
-			}
-			info.Hostname = hostname
+			// Remove trailing dot from FQDN hostname
+			info.Hostname = strings.TrimSuffix(names[0], ".")
 		}
 	}
 
@@ -147,29 +144,38 @@ func (r *Reader) OnlineFeaturesEnabled() bool {
 	return r.enableOnlineFeatures
 }
 
-// FilterFields returns a new IPInfo with only the requested fields
+// FilterFields returns a new IPInfo with only the requested fields.
+// Uses a switch statement for better performance by avoiding map allocation.
 func (info *IPInfo) FilterFields(fields []string) map[string]interface{} {
-	result := make(map[string]interface{})
+	// Pre-allocate with expected capacity: ip + attribution + requested fields
+	result := make(map[string]interface{}, len(fields)+2)
 	result["ip"] = info.IP
 	result["attribution"] = info.Attribution
 
-	fieldMap := map[string]interface{}{
-		"hostname":     info.Hostname,
-		"country":      info.Country,
-		"iso_code":     info.ISOCode,
-		"in_eu":        info.InEU,
-		"city":         info.City,
-		"region":       info.Region,
-		"latitude":     info.Latitude,
-		"longitude":    info.Longitude,
-		"timezone":     info.Timezone,
-		"asn":          info.ASN,
-		"organization": info.Organization,
-	}
-
 	for _, field := range fields {
-		if val, ok := fieldMap[field]; ok {
-			result[field] = val
+		switch field {
+		case "hostname":
+			result["hostname"] = info.Hostname
+		case "country":
+			result["country"] = info.Country
+		case "iso_code":
+			result["iso_code"] = info.ISOCode
+		case "in_eu":
+			result["in_eu"] = info.InEU
+		case "city":
+			result["city"] = info.City
+		case "region":
+			result["region"] = info.Region
+		case "latitude":
+			result["latitude"] = info.Latitude
+		case "longitude":
+			result["longitude"] = info.Longitude
+		case "timezone":
+			result["timezone"] = info.Timezone
+		case "asn":
+			result["asn"] = info.ASN
+		case "organization":
+			result["organization"] = info.Organization
 		}
 	}
 

@@ -41,6 +41,23 @@ const (
 	defaultListenAddr = ":8080"
 )
 
+// findDatabasePath searches for a database file in common locations
+func findDatabasePath(filename string) string {
+	execPath, _ := os.Executable()
+	execDir := filepath.Dir(execPath)
+	candidates := []string{
+		filepath.Join(execDir, "data", filename),
+		filepath.Join("/app/data", filename),
+		filepath.Join("data", filename),
+	}
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+	return ""
+}
+
 func main() {
 	// Parse command line flags
 	listenAddr := flag.String("l", "", "Address to listen on (default :8080)")
@@ -80,39 +97,14 @@ func main() {
 		*cityDBPath = os.Getenv("CITY_DB_PATH")
 	}
 	if *cityDBPath == "" {
-		// Default: look in same directory as executable, then /app/data
-		execPath, _ := os.Executable()
-		execDir := filepath.Dir(execPath)
-		candidates := []string{
-			filepath.Join(execDir, "data", "dbip-city-lite.mmdb"),
-			"/app/data/dbip-city-lite.mmdb",
-			"data/dbip-city-lite.mmdb",
-		}
-		for _, p := range candidates {
-			if _, err := os.Stat(p); err == nil {
-				*cityDBPath = p
-				break
-			}
-		}
+		*cityDBPath = findDatabasePath("dbip-city-lite.mmdb")
 	}
 
 	if *asnDBPath == "" {
 		*asnDBPath = os.Getenv("ASN_DB_PATH")
 	}
 	if *asnDBPath == "" {
-		execPath, _ := os.Executable()
-		execDir := filepath.Dir(execPath)
-		candidates := []string{
-			filepath.Join(execDir, "data", "dbip-asn-lite.mmdb"),
-			"/app/data/dbip-asn-lite.mmdb",
-			"data/dbip-asn-lite.mmdb",
-		}
-		for _, p := range candidates {
-			if _, err := os.Stat(p); err == nil {
-				*asnDBPath = p
-				break
-			}
-		}
+		*asnDBPath = findDatabasePath("dbip-asn-lite.mmdb")
 	}
 
 	if *cityDBPath == "" || *asnDBPath == "" {
