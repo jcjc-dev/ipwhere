@@ -1,0 +1,45 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore: ['README.md']
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Download MMDB databases
+        run: make download-db
+
+      - name: Run Go tests
+        run: go test -v ./...
+
+      - name: Install frontend dependencies
+        run: cd web && npm ci
+
+      - name: Run frontend tests
+        run: cd web && npm test
+
+  build:
+    name: Docker Build
+    needs: test
+    uses: ./.github/workflows/reusable-docker-build.yml
+    with:
+      push: false
+      platforms: linux/amd64
