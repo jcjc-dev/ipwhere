@@ -1,6 +1,6 @@
 # IPWhere
 
-[![PR Validation](https://github.com/jcjc-dev/ipwhere/actions/workflows/ci.yml/badge.svg)](https://github.com/jcjc-dev/ipwhere/actions/workflows/ci.yml) [![Build and Publish](https://github.com/jcjc-dev/ipwhere/actions/workflows/build-release.yml/badge.svg)](https://github.com/jcjc-dev/ipwhere/actions/workflows/build-release.yml)
+[![Build and Publish](https://github.com/jcjc-dev/ipwhere/actions/workflows/build-release.yml/badge.svg)](https://github.com/jcjc-dev/ipwhere/actions/workflows/build-release.yml)
 
 An all-in-one IP geolocation lookup server inspired by [echoip](https://github.com/mpolden/echoip). This project provides a simple, self-hosted solution for looking up IP address information including country, city, coordinates, timezone, and ASN data.
 
